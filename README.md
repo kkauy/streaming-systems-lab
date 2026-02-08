@@ -1,16 +1,37 @@
-# Kafka Local Lab
+# Breast Cancer Classification (Logistic Regression Baseline)
 
-This project sets up a reproducible local Apache Kafka environment using Docker
-and explores producer behavior, topic partitioning, and real-world configuration
-differences compared to managed tutorial playgrounds.
+This project trains a logistic regression model on the Wisconsin Breast Cancer dataset to establish a baseline machine learning pipeline.
 
-Unlike educational sandboxes that auto-provision topics and partitions,
-this lab reflects production-like behavior where topic metadata must be
-explicitly created and managed.
+## Features
+- Data preprocessing and label encoding
+- Stratified train/test split
+- Standard scaling to avoid feature magnitude bias
+- Logistic regression with different regularization strengths
+- Evaluation using ROC-AUC and classification report
 
-## Key Learning Goals
+## How to Run
 
-- Run Kafka locally using Docker and KRaft mode
-- Understand topic metadata and partition configuration
-- Observe producer partitioning behavior with and without message keys
-- Compare tutorial playground environments vs real Kafka deployments
+```bash
+python python-ml/train.py
+
+## Dataset
+
+This project uses the **Wisconsin Breast Cancer dataset**,  
+which contains 569 samples with features computed from digitized images of breast masses.
+
+- Binary classification: malignant (1) vs benign (0)
+- 30 numerical input features
+- Common benchmark dataset for ML classification
+
+The dataset file should be placed at:
+data/breast_cancer.csv
+
+
+## Future Work
+
+Planned improvements to move beyond the baseline:
+
+- Cross-validation for more reliable evaluation
+- Hyperparameter tuning using grid search
+- Model persistence for reproducibility
+- Comparison with nonlinear models (e.g., SVM, Random Forest)
