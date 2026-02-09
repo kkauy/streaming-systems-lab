@@ -1,13 +1,12 @@
 # python-ml/train.py
 
 import pandas as pd
-
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, classification_report
+
 from pathlib import Path
-import pandas as pd
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "breast_cancer.csv"
 
@@ -26,10 +25,16 @@ def train_and_eval(X_train, y_train, X_test, y_test, C_value: float):
     y_pred = model.predict(X_test_scaled)
     y_prob = model.predict_proba(X_test_scaled)[:, 1]
 
+    # --- Train ROC-AUC (how well it fits seen data) ---
+    y_train_prob = model.predict_proba(X_train_scaled)[:, 1]
+    train_roc = roc_auc_score(y_train, y_train_prob)
+
     # Metrics
     roc = roc_auc_score(y_test, y_prob)
     report = classification_report(y_test, y_pred, digits=3)
-    return roc, report
+    test_roc = roc_auc_score(y_test, y_prob)
+    return train_roc, test_roc, report
+
 
 
 def main():
@@ -62,11 +67,13 @@ def main():
 
     # 5) Regularization experiment (C smaller => stronger regularization)
     for C_value in [1.0, 0.1, 0.01]:
-        roc, report = train_and_eval(X_train, y_train, X_test, y_test, C_value)
+        train_roc, test_roc, report = train_and_eval(X_train, y_train, X_test, y_test, C_value)
+
         print("\n" + "=" * 60)
         print(f"C = {C_value}  (smaller C => stronger regularization)")
+        print(f"Train ROC-AUC: {train_roc:.4f}")
+        print(f"Test  ROC-AUC: {test_roc:.4f}")
         print(report)
-        print("ROC-AUC:", roc)
 
 
 if __name__ == "__main__":
