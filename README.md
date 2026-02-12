@@ -1,37 +1,99 @@
-# Breast Cancer Classification (Logistic Regression Baseline)
+# Breast Cancer Diagnosis – Logistic Regression Study
 
-This project trains a logistic regression model on the Wisconsin Breast Cancer dataset to establish a baseline machine learning pipeline.
+## Overview
+This project investigates the robustness and generalization ability of a
+logistic regression model for breast cancer diagnosis using structured
+machine learning evaluation.
 
-## Features
-- Data preprocessing and label encoding
+The workflow follows a **research-grade evaluation protocol**:
 - Stratified train/test split
-- Standard scaling to avoid feature magnitude bias
-- Logistic regression with different regularization strengths
-- Evaluation using ROC-AUC and classification report
+- Hyperparameter selection via stratified cross-validation
+- Final unbiased evaluation on a held-out test set
+- Reproducible preprocessing without data leakage
 
-## How to Run
-
-```bash
-python python-ml/train.py
+---
 
 ## Dataset
+- Source: Breast Cancer Wisconsin Dataset
+- Samples: 569
+- Target: Malignant (1) vs Benign (0)
 
-This project uses the **Wisconsin Breast Cancer dataset**,  
-which contains 569 samples with features computed from digitized images of breast masses.
+Class distribution is preserved using **stratified splitting**.
 
-- Binary classification: malignant (1) vs benign (0)
-- 30 numerical input features
-- Common benchmark dataset for ML classification
+---
 
-The dataset file should be placed at:
-data/breast_cancer.csv
+## Methodology
 
+### 1. Preprocessing
+- Feature scaling using **StandardScaler**
+- Scaler fitted only on training data to prevent **data leakage**
 
-## Future Work
+### 2. Model
+- Logistic Regression with **L2 regularization**
+- Hyperparameter **C** selected via **5-fold Stratified Cross-Validation**
 
-Planned improvements to move beyond the baseline:
+### 3. Evaluation Protocol
+- Cross-validation reports:
+  - **Mean ROC-AUC**
+  - **Standard deviation (stability)**
+- Final model evaluated **once** on held-out test set  
+  → ensures **unbiased performance estimate**
 
-- Cross-validation for more reliable evaluation
-- Hyperparameter tuning using grid search
-- Model persistence for reproducibility
-- Comparison with nonlinear models (e.g., SVM, Random Forest)
+---
+
+## Results
+
+### Cross-Validation (Training Set Only)
+
+| C | Train ROC-AUC | Val ROC-AUC |
+|---|---------------|-------------|
+| 1.0 | 0.9977 ± 0.0008 | **0.9958 ± 0.0047** |
+| 0.1 | 0.9958 ± 0.0012 | 0.9949 ± 0.0056 |
+| 0.01 | 0.9928 ± 0.0014 | 0.9911 ± 0.0090 |
+
+**Selected C = 1.0**  
+(best validation ROC with stable variance)
+
+---
+
+### Final Held-Out Test Performance
+
+- **Train ROC-AUC:** 0.9976  
+- **Test ROC-AUC:** 0.9960  
+
+Indicates:
+- High discriminative ability  
+- Minimal overfitting  
+- Strong generalization stability
+
+---
+
+## Reproducibility
+- Fixed random seeds (`random_state=42`)
+- Stratified splitting across all stages
+- No leakage between train / validation / test
+
+This ensures **deterministic and reproducible results**.
+
+---
+
+## Tech Stack
+- Python
+- Pandas / NumPy
+- scikit-learn
+
+---
+
+## Research Significance
+Demonstrates a **reproducible machine learning evaluation pipeline**
+suitable for:
+
+- Medical risk prediction studies  
+- Academic research prototyping  
+- Reliable model selection under limited data  
+
+---
+
+## Author
+Anthony Au Yeung  
+B.S. Computer Science, WGU (2026)
