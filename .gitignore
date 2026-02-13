@@ -1,50 +1,53 @@
 # =========================
-# Gradle
+# Python / ML
 # =========================
-.gradle/
-build/
-**/build/
-
-!gradle/wrapper/gradle-wrapper.jar
-
-# =========================
-# IntelliJ IDEA
-# =========================
-.idea/
-*.iml
-out/
-**/out/
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
 
 # =========================
-# VS Code
+# Environment / Secrets
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# IDE / Editor
 # =========================
 .vscode/
+.idea/
+*.iml
+.settings/
+*.swp
+*.swo
 
 # =========================
-# Eclipse
-# =========================
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-**/bin/
-
-# =========================
-# NetBeans
-# =========================
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-# =========================
-# OS files
+# OS junk
 # =========================
 .DS_Store
 Thumbs.db
-.idea/
+
+# =========================
+# Build / Logs
+# =========================
+build/
+dist/
+*.log
+.gradle/
+out/
+
+# =========================
+# Java / Gradle (你 repo 有)
+# =========================
+**/build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# =========================
+# Artifacts
+# =========================
+python-ml/artifacts/

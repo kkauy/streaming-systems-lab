@@ -1,194 +1,271 @@
-# Breast Cancer Diagnosis – Logistic Regression Study
+# Breast Cancer Diagnosis – Logistic Regression Research Study
 
-## Overview
-This project investigates the robustness and generalization ability of a
-logistic regression model for breast cancer diagnosis using structured
-machine learning evaluation.
+## Research Objective
 
-The workflow follows a **research-grade evaluation protocol**:
-- Stratified train/test split
-- Hyperparameter selection via stratified cross-validation
-- Final unbiased evaluation on a held-out test set
-- Reproducible preprocessing without data leakage
+This study investigates the generalization stability and clinical reliability 
+of a logistic regression classifier for breast cancer diagnosis using 
+structured machine learning evaluation.
+
+## Research Question
+
+Can a properly regularized logistic regression model achieve stable, 
+high-confidence discrimination between malignant and benign tumors under 
+rigorous cross-validation and unbiased test evaluation?
+
+## Hypothesis
+
+We hypothesize that with:
+- Careful regularization tuning (C parameter)
+- Strict data leakage prevention  
+- Stratified cross-validation model selection
+
+The model will demonstrate:
+- High ROC-AUC (>0.99)
+- Minimal train–test performance gap
+- Clinically meaningful recall for malignant cases
+
+This would indicate robust generalization rather than overfitting.
 
 ---
 
 ## Dataset
-- Source: Breast Cancer Wisconsin Dataset
-- Samples: 569
-- Target: Malignant (1) vs Benign (0)
 
-Class distribution is preserved using **stratified splitting**.
+**Source:** Breast Cancer Wisconsin Diagnostic Dataset  
+**Samples:** 569  
+**Target:**
+- Malignant → 1
+- Benign → 0
+
+Class balance is preserved using **stratified sampling** across:
+- Train/test split (80/20)
+- Cross-validation folds (5-fold)
+
+This ensures statistically fair evaluation.
 
 ---
 
 ## Methodology
 
-### 1. Preprocessing
-- Feature scaling using **StandardScaler**
-- Scaler fitted only on training data to prevent **data leakage**
+### 1. Leakage-Free Preprocessing
+- Features standardized via `StandardScaler`
+- Scaler **fitted only on training data**
+- Prevents information leakage into validation/test sets
+- Mirrors real clinical deployment conditions
 
-### 2. Model
-- Logistic Regression with **L2 regularization**
-- Hyperparameter **C** selected via **5-fold Stratified Cross-Validation**
+### 2. Model Formulation
+- **Logistic Regression** with L2 regularization
+- Hyperparameter C ∈ {1.0, 0.1, 0.01}
+- LBFGS solver with max_iter=2000 for convergence
 
-### 3. Evaluation Protocol
-- Cross-validation reports:
-  - **Mean ROC-AUC**
-  - **Standard deviation (stability)**
-- Final model evaluated **once** on held-out test set  
-  → ensures **unbiased performance estimate**
+**Why Logistic Regression?**
+- Interpretable coefficients
+- Statistical stability on small datasets
+- Clinical transparency for medical applications
+
+### 3. Rigorous Evaluation Protocol
+
+**Model Selection:**
+- 5-fold Stratified Cross-Validation
+- Metrics: Mean ROC-AUC ± Standard Deviation
+
+**Final Evaluation:**
+- Held-out test set evaluated **exactly once**
+- Provides unbiased generalization estimate
 
 ---
 
 ## Evaluation Pipeline
 ```
-Raw Data (569 samples)
-    ↓
-[Stratified Split: 80/20]
-    ↓
-Training Set (455) ────→ 5-Fold CV → Select C=1.0
-    ↓                         ↓
-    ↓                    Val ROC: 0.9958±0.0047
-    ↓
-[Train final model with C=1.0]
-    ↓
-Test Set (114) ────→ Final Evaluation
-                         ↓
-                    Test ROC: 0.9960
+Raw Dataset (569 samples)
+        ↓
+Stratified Train/Test Split (80/20)
+        ↓
+Training Set (455) ──────→ Test Set (114, HELD OUT)
+        ↓
+5-Fold Stratified CV
+        ↓
+Hyperparameter Selection (C)
+        ↓
+Train Final Model (C=1.0)
+        ↓
+Single Test Evaluation
+        ↓
+Results: Train ROC=0.9976, Test ROC=0.9960
 ```
 
 ---
 
 ## Results
 
-### Cross-Validation (Training Set Only)
+### Cross-Validation Performance (Training Set Only)
 
-| C | Train ROC-AUC | Val ROC-AUC |
-|---|---------------|-------------|
-| 1.0 | 0.9977 ± 0.0008 | **0.9958 ± 0.0047** |
-| 0.1 | 0.9958 ± 0.0012 | 0.9949 ± 0.0056 |
-| 0.01 | 0.9928 ± 0.0014 | 0.9911 ± 0.0090 |
+| C    | Train ROC-AUC      | Validation ROC-AUC |
+|------|--------------------|--------------------|
+| 1.0  | 0.9977 ± 0.0008   | **0.9958 ± 0.0047** |
+| 0.1  | 0.9958 ± 0.0012   | 0.9949 ± 0.0056    |
+| 0.01 | 0.9928 ± 0.0014   | 0.9911 ± 0.0090    |
 
-**Selected C = 1.0**  
-(best validation ROC with stable variance)
+**Selected C = 1.0** (highest validation ROC with stable variance)
 
 ---
 
 ### Final Held-Out Test Performance
 
-- **Train ROC-AUC:** 0.9976  
-- **Test ROC-AUC:** 0.9960  
+- **Train ROC-AUC:** 0.9976
+- **Test ROC-AUC:** 0.9960
 
-Indicates:
-- High discriminative ability  
-- Minimal overfitting  
-- Strong generalization stability
+**Interpretation:**
+- Extremely strong class separability
+- Negligible overfitting (0.0016 gap)
+- High generalization stability
 
 ---
 
-### Classification Report (Test Set)
+### Classification Metrics (Test Set)
 
-|           | Precision | Recall | F1-Score | Support |
+| Class     | Precision | Recall | F1-Score | Support |
 |-----------|-----------|--------|----------|---------|
 | Benign    | 0.982     | 0.986  | 0.984    | 71      |
 | Malignant | 0.977     | 0.971  | 0.974    | 43      |
 | **Accuracy** |        |        | **0.982** | **114** |
 
-**Key Insight:** High recall (97.1%) for malignant cases is critical in cancer screening to minimize false negatives.
-
-## Reproducibility
-- Fixed random seeds (`random_state=42`)
-- Stratified splitting across all stages
-- No leakage between train / validation / test
-
-This ensures **deterministic and reproducible results**.
+**Clinical Insight:**  
+High malignant recall (97.1%) is critical in cancer screening where 
+false negatives carry severe clinical consequences.
 
 ---
 
-## Data Leakage Prevention
+## Model Interpretability
 
-Medical ML evaluation is highly sensitive to leakage.  
-This project explicitly prevents leakage by:
+Logistic regression provides inherent interpretability through:
+- **Coefficient analysis** showing feature influence direction and magnitude
+- **Linear decision boundary** that is clinically transparent
+- **Feature ranking** by absolute coefficient values
 
-- Fitting preprocessing **only on training folds**
-- Performing cross-validation **before** final testing
-- Using the held-out test set **exactly once**
-
-This guarantees an **unbiased estimate of clinical generalization**.
-
----
-
-## Clinical Interpretation
-
-### Why ROC-AUC Matters for Cancer Detection
-- **Class imbalance resilient:** Unlike accuracy, ROC-AUC evaluates performance across all classification thresholds
-- **Risk stratification:** Probability outputs enable physicians to adjust sensitivity/specificity based on clinical context
-
-### Model Performance Context
-- Test ROC-AUC of **0.9960** indicates excellent discriminative ability
-- Small train-test gap (0.9976 → 0.9960) suggests minimal overfitting
-- For clinical deployment, external validation on different patient populations would be required
-## Tech Stack
-- **Python 3.x**
-- **Data Processing:** Pandas, NumPy
-- **Machine Learning:** scikit-learn (LogisticRegression, StratifiedKFold, StandardScaler)
-- **Evaluation:** ROC-AUC, Classification Report
-- **Persistence:** PostgreSQL (experiment tracking via custom `model_runs_repo`)
+This interpretability is essential for:
+- Medical professional trust
+- Regulatory approval
+- Clinical decision support
 
 ---
 
-## Experiment Tracking and Research Integrity
+## Reproducibility and Research Integrity
 
-All training runs are persisted into a PostgreSQL database to ensure:
+This study enforces deterministic, auditable ML practice:
+- ✅ Fixed random seeds (`random_state=42`)
+- ✅ Fully stratified evaluation at all stages
+- ✅ Strict data leakage prevention
+- ✅ Single-use held-out test set
+- ✅ PostgreSQL experiment tracking for audit trails
 
-- **Reproducibility** of experimental outcomes  
-- **Auditability** of hyperparameter selection  
-- **Transactional integrity** of stored research metrics  
-
-This mirrors real-world **ML research and MLOps experiment tracking practices**.
+This approach mirrors real-world ML research standards and MLOps governance.
 
 ---
 
-## Key Contributions
+## Limitations
 
-This project demonstrates:
-
-1. **Proper ML evaluation protocol** preventing common pitfalls:
-   - Data leakage via correct train/test scaling
-   - Selection bias via nested CV for hyperparameter tuning
-   - Overfitting via single test set evaluation
-
-2. **Reproducible research workflow** including:
-   - Deterministic random seeds
-   - Experiment tracking (PostgreSQL logging)
-   - Documented preprocessing steps
-
-3. **Production-ready considerations**:
-   - Stratified sampling for imbalanced medical data
-   - ROC-AUC metric appropriate for diagnostic tasks
-   - Model versioning for audit trails
-
-**Limitations:**
-- Small dataset (n=569) limits generalizability
-- Single-center data may not represent diverse populations
-- Feature interpretability not explored (future work: SHAP values)
+1. **Small dataset** (n=569) limits statistical power for rare patterns
+2. **Single-source data** may reduce generalization to diverse populations
+3. **Linear decision boundary** may miss complex nonlinear biological interactions
+4. **Feature interpretability** could be enhanced with advanced attribution methods
 
 ---
 
 ## Future Research Directions
 
-Potential extensions toward clinical research deployment include:
+To advance toward clinical-grade medical AI:
 
-- **Model interpretability** via SHAP feature attribution  
-- **External validation** on independent patient cohorts  
-- **Comparison with nonlinear learners** (Random Forest, Gradient Boosting)  
-- **Probability calibration** for clinical risk estimation  
+1. **External validation** on independent patient cohorts
+2. **Feature attribution analysis** for clinical explainability
+3. **Ensemble comparison** (Random Forest, XGBoost) for performance benchmarking
+4. **Probability calibration** for risk-stratified decision thresholds
+5. **Prospective clinical trials** for real-world validation
 
-These directions move the study closer to **translational medical AI research**.
+---
+
+## Tech Stack
+
+**Core:**
+- Python 3
+- Pandas, NumPy (data processing)
+- scikit-learn (ML pipeline)
+
+**Models & Evaluation:**
+- `LogisticRegression` (L2 regularization)
+- `StratifiedKFold` (cross-validation)
+- `StandardScaler` (preprocessing)
+- ROC-AUC, Precision, Recall, F1-Score
+
+**Infrastructure:**
+- PostgreSQL (experiment tracking)
+- Git (version control)
+
+---
+
+## Running the Project
+
+### Prerequisites
+```bash
+pip install pandas numpy scikit-learn psycopg2-binary matplotlib seaborn
+```
+
+### Quick Start
+```bash
+python python-ml/train.py
+```
+
+### Expected Output
+```
+Train class ratio (mean y): 0.371
+Test  class ratio (mean y): 0.377
+
+============================================================
+Cross-validation selection for C (TRAIN only)
+C=1.0   Train ROC=0.9977±0.0008  Val ROC=0.9958±0.0047
+...
+
+Selected C = 1.0 (best CV Val ROC mean, stable std)
+
+============================================================
+FINAL C=1.0
+Train ROC-AUC: 0.9976
+Test  ROC-AUC: 0.9960
+
+              precision    recall  f1-score   support
+...
+
+Saved model run to Postgres (model_runs).
+```
+
+### Database Setup (Optional)
+Experiment tracking uses PostgreSQL for audit trails. Configure connection 
+in `db.py`, or the code will run without database logging.
+
+---
+
+## Repository Structure
+```
+.
+├── python-ml/
+│   ├── train.py              # Main training pipeline
+│   ├── model_runs_repo.py    # Database logging
+│   └── db.py                 # Database connection
+├── data/
+│   └── breast_cancer.csv     # Dataset
+└── README.md
+```
 
 ---
 
 ## Author
-Anthony Au Yeung  
-B.S. Computer Science, WGU (2026)
+
+Anthony Au Yeung
+WGU Computer Science Graduate  
+Github: https://github.com/kkauy
+Linedin: https://www.linkedin.com/in/anthony-swe/
+
+---
+
+## Acknowledgments
+
+Dataset: UCI Machine Learning Repository - Breast Cancer Wisconsin (Diagnostic)

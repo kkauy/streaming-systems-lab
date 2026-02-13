@@ -15,7 +15,7 @@ DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "breast_cancer.csv
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
 ARTIFACT_DIR.mkdir(exist_ok=True)
 
-
+# data preprocessing
 def load_dataset(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
     if "Unnamed: 32" in df.columns:
@@ -117,18 +117,14 @@ def train_final_model(X_train, y_train, C_value):
     return pipe
 
 
-def evaluate_model(scaler, model, X_train, y_train, X_test, y_test):
-    # soft scores for ROC-AOC
-    X_train_scaled = scaler.transform(X_train)
-    X_test_scaled = scaler.transform(X_test)
+def evaluate_model(pipe, X_train, y_train, X_test, y_test):
 
-    # train ROC- AOC
-    y_train_prob = model.predict_proba(X_train_scaled)[:, 1]
-    # hard label: precision, recall and F1
-    y_test_prob = model.predict_proba(X_test_scaled)[:, 1]
+    # ROC uses probability scores
+    y_train_prob = pipe.predict_proba(X_train)[:, 1]
+    y_test_prob = pipe.predict_proba(X_test)[:, 1]
 
-    # Soft core: ROC-AOC use (ranking)
-    y_test_pred = model.predict(X_test_scaled)
+    # hard labels for classification report
+    y_test_pred = pipe.predict(X_test)
 
     train_roc = roc_auc_score(y_train, y_train_prob)
     test_roc = roc_auc_score(y_test, y_test_prob)
