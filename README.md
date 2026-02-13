@@ -109,6 +109,32 @@ Results: Train ROC=0.9976, Test ROC=0.9960
 
 ---
 
+## Visualizations
+
+### ROC Curve
+![ROC Curve](python-ml/artifacts/roc_curve.png)
+
+The ROC curve demonstrates excellent discriminative ability with AUC = 0.9964.
+
+### Confusion Matrix  
+![Confusion Matrix](python-ml/artifacts/confusion_matrix.png)
+
+**Clinical Metrics:**
+- Recall (Sensitivity): 95.2% - Caught 40/42 malignant cases
+- Precision (PPV): 97.6% - 40/41 positive predictions correct
+
+### Feature Importance
+![Feature Importance](python-ml/artifacts/feature_importance.png)
+
+Top predictive features based on logistic regression coefficients.
+
+### Cross-Validation Performance
+![CV Performance](python-ml/artifacts/cv_performance.png)
+
+Hyperparameter comparison showing C=1.0 achieves best validation performance.
+
+---
+
 ### Final Held-Out Test Performance
 
 - **Train ROC-AUC:** 0.9976

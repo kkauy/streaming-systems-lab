@@ -10,6 +10,8 @@ from pathlib import Path
 from data_analysis import exploratory_data_analysis
 from model_runs_repo import insert_model_run
 from sklearn.pipeline import Pipeline
+from visualize_results import generate_all_visualizations
+
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "breast_cancer.csv"
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
@@ -18,11 +20,32 @@ ARTIFACT_DIR.mkdir(exist_ok=True)
 # data preprocessing
 def load_dataset(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
+
+    # Drop empty column
     if "Unnamed: 32" in df.columns:
         df = df.drop(columns=["Unnamed: 32"])
+
+    # Lable encode
     df["diagnosis"] = df["diagnosis"].map({"M": 1, "B": 0})
+
+    # Robust handling of bad values
+    # replace inf with NaN
     df = df.replace([np.inf, -np.inf], np.nan)
+
+    # Check for remaining inf innumeric columns
+    numeric_cols = df.select_dtypes(include=[np.number]).columns
+
+    # Drop rows with NaN
     df = df.dropna()
+
+    # Fill with column median
+    for col in numeric_cols:
+        if col != 'diagnosis':
+            upper_limit = df[col].quantile(0.999)
+            lower_limit = df[col].quantile(0.001)
+            df[col] = df[col].clip(lower = lower_limit, upper = upper_limit)
+
+
 
     return df
 
@@ -94,10 +117,13 @@ def select_best_c_by_cv(X_train, y_train, C_candidates=(1.0, 0.1, 0.01), n_split
     best_C = None
     best_val_mean = -1.0
     best_val_std = None
+    cv_results = {}
 
     for C_value in C_candidates:
         tr_m, tr_s, val_m, val_s = cv_roc_for_C(X_train, y_train, C_value, n_splits=n_splits)
         print(f"C={C_value:<4}  Train ROC={tr_m:.4f}±{tr_s:.4f}  Val ROC={val_m:.4f}±{val_s:.4f}")
+
+        cv_results[C_value] = (tr_m, tr_s, val_m, val_s)
 
         # pick best by highest val mean
         if (val_m > best_val_mean) or (val_m == best_val_mean and (best_val_std is None or val_s < best_val_std)):
@@ -105,7 +131,7 @@ def select_best_c_by_cv(X_train, y_train, C_candidates=(1.0, 0.1, 0.01), n_split
             best_val_std = val_s
             best_C = C_value
 
-    return best_C, best_val_mean, best_val_std
+    return best_C, best_val_mean, best_val_std, cv_results
 
 
 def train_final_model(X_train, y_train, C_value):
@@ -157,20 +183,24 @@ def main():
     df = load_dataset(DATA_PATH)
     X_train, X_test, y_train, y_test = make_train_test_split(df)
 
+    #Debug checks
     debug_matrix("X_train (raw)", X_train)
     debug_matrix("X_test  (raw)", X_test)
     print("DEBUG_MARKER: after debug_matrix")
 
+    #Data sanity check
     print("Train class ratio (mean y):", float(y_train.mean()))
     print("Test  class ratio (mean y):", float(y_test.mean()))
     print(df[["radius_mean", "area_mean"]].describe())
 
+    # Hyperparameter selection via CV
     print("\n" + "=" * 60)
     print("Cross-validation selection for C (TRAIN only)")
-    best_C, best_val_mean, best_val_std = select_best_c_by_cv(X_train, y_train)
+    best_C, best_val_mean, best_val_std, cv_results = select_best_c_by_cv(X_train, y_train)
 
     print(f"\nSelected C = {best_C} (best CV Val ROC mean, stable std)")
 
+    # Final model training and evaluation
     print("\n" + "=" * 60)
     print("Final evaluation on held-out TEST set (used once)")
     pipe = train_final_model(X_train, y_train, best_C)
@@ -180,6 +210,8 @@ def main():
     print(f"Train ROC-AUC: {train_roc:.4f}")
     print(f"Test  ROC-AUC: {test_roc:.4f}")
     print(report)
+
+    generate_all_visualizations(pipe, X_train, X_test, y_train, y_test, cv_results)
 
     persist_results(best_C, best_val_mean, best_val_std, test_roc)
     save_artifacts(pipe, X_train.columns)
