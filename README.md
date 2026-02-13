@@ -106,6 +106,19 @@ This ensures **deterministic and reproducible results**.
 
 ---
 
+## Data Leakage Prevention
+
+Medical ML evaluation is highly sensitive to leakage.  
+This project explicitly prevents leakage by:
+
+- Fitting preprocessing **only on training folds**
+- Performing cross-validation **before** final testing
+- Using the held-out test set **exactly once**
+
+This guarantees an **unbiased estimate of clinical generalization**.
+
+---
+
 ## Clinical Interpretation
 
 ### Why ROC-AUC Matters for Cancer Detection
@@ -122,6 +135,18 @@ This ensures **deterministic and reproducible results**.
 - **Machine Learning:** scikit-learn (LogisticRegression, StratifiedKFold, StandardScaler)
 - **Evaluation:** ROC-AUC, Classification Report
 - **Persistence:** PostgreSQL (experiment tracking via custom `model_runs_repo`)
+
+---
+
+## Experiment Tracking and Research Integrity
+
+All training runs are persisted into a PostgreSQL database to ensure:
+
+- **Reproducibility** of experimental outcomes  
+- **Auditability** of hyperparameter selection  
+- **Transactional integrity** of stored research metrics  
+
+This mirrors real-world **ML research and MLOps experiment tracking practices**.
 
 ---
 
@@ -148,6 +173,19 @@ This project demonstrates:
 - Small dataset (n=569) limits generalizability
 - Single-center data may not represent diverse populations
 - Feature interpretability not explored (future work: SHAP values)
+
+---
+
+## Future Research Directions
+
+Potential extensions toward clinical research deployment include:
+
+- **Model interpretability** via SHAP feature attribution  
+- **External validation** on independent patient cohorts  
+- **Comparison with nonlinear learners** (Random Forest, Gradient Boosting)  
+- **Probability calibration** for clinical risk estimation  
+
+These directions move the study closer to **translational medical AI research**.
 
 ---
 

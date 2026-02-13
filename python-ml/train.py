@@ -1,4 +1,3 @@
-from pathlib import Path
 import json
 import joblib
 import numpy as np
@@ -7,8 +6,10 @@ from sklearn.model_selection import train_test_split, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import roc_auc_score, classification_report
-
+from pathlib import Path
+from data_analysis import exploratory_data_analysis
 from model_runs_repo import insert_model_run
+from sklearn.pipeline import Pipeline
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "breast_cancer.csv"
 ARTIFACT_DIR = Path(__file__).resolve().parent / "artifacts"
@@ -20,6 +21,9 @@ def load_dataset(path: Path) -> pd.DataFrame:
     if "Unnamed: 32" in df.columns:
         df = df.drop(columns=["Unnamed: 32"])
     df["diagnosis"] = df["diagnosis"].map({"M": 1, "B": 0})
+    df = df.replace([np.inf, -np.inf], np.nan)
+    df = df.dropna()
+
     return df
 
 
@@ -34,39 +38,58 @@ def make_train_test_split(df: pd.DataFrame, test_size=0.2, random_state=42):
     )
     return X_train, X_test, y_train, y_test
 
+def debug_matrix(name, X):
+    X_np = X.to_numpy()
+    print(f"\n--- {name} ---")
+    print("shape:", X_np.shape)
+    print("nan count:", np.isnan(X_np).sum())
+    print("inf count:", np.isinf(X_np).sum())
+    print("max abs:", np.nanmax(np.abs(X_np)))
+
 # cross validation
 def cv_roc_for_C(X_train, y_train, C_value, n_splits=5, random_state=42):
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_state)
 
+    # converts to numpy
     X_np = X_train.to_numpy()
     y_np = y_train.to_numpy()
 
     train_rocs = []
     val_rocs = []
 
-    for train_idx, val_idx in skf.split(X_np, y_np):
+    for fold_idx, (train_idx, val_idx) in enumerate(skf.split(X_np, y_np), start=1):
         X_tr, X_val = X_np[train_idx], X_np[val_idx]
         y_tr, y_val = y_np[train_idx], y_np[val_idx]
 
-        # fold : fit scaler on fold - train only
-        scaler = StandardScaler()
-        X_tr_scaled = scaler.fit_transform(X_tr)
-        X_val_scaled = scaler.transform(X_val)
+        # a new pipeline built for not data leakage
+        pipe = Pipeline([
+            ("scaler", StandardScaler()),
+            ("lr", LogisticRegression(
+                max_iter=2000,
+                C=C_value,
+                solver="lbfgs"
+            ))
+        ])
 
-        # probability Soft core for ROC -AOC
-        model = LogisticRegression(max_iter=2000, C=C_value)
-        model.fit(X_tr_scaled, y_tr)
+        # fold-train
+        pipe.fit(X_tr, y_tr)
 
-        # probability of class 1 (maglignant)
-        train_prob = model.predict_proba(X_tr_scaled)[:, 1]
-        val_prob = model.predict_proba(X_val_scaled)[:, 1]
+        # predict_proba：ROC-AUC needs “soft score”
+        train_prob = pipe.predict_proba(X_tr)[:, 1]
+        val_prob   = pipe.predict_proba(X_val)[:, 1]
 
         train_rocs.append(roc_auc_score(y_tr, train_prob))
         val_rocs.append(roc_auc_score(y_val, val_prob))
 
-    return float(np.mean(train_rocs)), float(np.std(train_rocs)), float(np.mean(val_rocs)), float(np.std(val_rocs))
+    return (
+        float(np.mean(train_rocs)),
+        float(np.std(train_rocs)),
+        float(np.mean(val_rocs)),
+        float(np.std(val_rocs))
+    )
 
 
+# model selection
 def select_best_c_by_cv(X_train, y_train, C_candidates=(1.0, 0.1, 0.01), n_splits=5):
     best_C = None
     best_val_mean = -1.0
@@ -86,19 +109,16 @@ def select_best_c_by_cv(X_train, y_train, C_candidates=(1.0, 0.1, 0.01), n_split
 
 
 def train_final_model(X_train, y_train, C_value):
-    # Scaling (fit only on train)
-    scaler = StandardScaler()
-    # fit on train
-    X_train_scaled = scaler.fit_transform(X_train)
-
-    # Logistic regression (L2 regularization)
-    model = LogisticRegression(max_iter=2000, C=C_value)
-    model.fit(X_train_scaled, y_train)
-    return scaler, model
+    pipe = Pipeline([
+        ("scaler", StandardScaler()),
+        ("lr", LogisticRegression(max_iter=2000, C=C_value, solver="lbfgs"))
+    ])
+    pipe.fit(X_train, y_train)
+    return pipe
 
 
 def evaluate_model(scaler, model, X_train, y_train, X_test, y_test):
-
+    # soft scores for ROC-AOC
     X_train_scaled = scaler.transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
@@ -117,9 +137,8 @@ def evaluate_model(scaler, model, X_train, y_train, X_test, y_test):
     return float(train_roc), float(test_roc), report
 
 
-def save_artifacts(scaler, model, feature_cols):
-    joblib.dump(scaler, ARTIFACT_DIR / "scaler.joblib")
-    joblib.dump(model, ARTIFACT_DIR / "model.joblib")
+def save_artifacts(pipe, feature_cols):
+    joblib.dump(pipe, ARTIFACT_DIR / "pipeline.joblib")
     (ARTIFACT_DIR / "feature_cols.json").write_text(json.dumps(list(feature_cols)))
     print(f"Saved artifacts to {ARTIFACT_DIR}/")
 
@@ -142,6 +161,10 @@ def main():
     df = load_dataset(DATA_PATH)
     X_train, X_test, y_train, y_test = make_train_test_split(df)
 
+    debug_matrix("X_train (raw)", X_train)
+    debug_matrix("X_test  (raw)", X_test)
+    print("DEBUG_MARKER: after debug_matrix")
+
     print("Train class ratio (mean y):", float(y_train.mean()))
     print("Test  class ratio (mean y):", float(y_test.mean()))
     print(df[["radius_mean", "area_mean"]].describe())
@@ -154,8 +177,8 @@ def main():
 
     print("\n" + "=" * 60)
     print("Final evaluation on held-out TEST set (used once)")
-    scaler, model = train_final_model(X_train, y_train, best_C)
-    train_roc, test_roc, report = evaluate_model(scaler, model, X_train, y_train, X_test, y_test)
+    pipe = train_final_model(X_train, y_train, best_C)
+    train_roc, test_roc, report = evaluate_model(pipe, X_train, y_train, X_test, y_test)
 
     print(f"FINAL C={best_C}")
     print(f"Train ROC-AUC: {train_roc:.4f}")
@@ -163,7 +186,7 @@ def main():
     print(report)
 
     persist_results(best_C, best_val_mean, best_val_std, test_roc)
-    save_artifacts(scaler, model, X_train.columns)
+    save_artifacts(pipe, X_train.columns)
 
 if __name__ == "__main__":
     main()
