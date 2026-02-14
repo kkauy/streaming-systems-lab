@@ -42,12 +42,7 @@ dist/
 out/
 
 # =========================
-# Java / Gradle (你 repo 有)
+# Java / Gradle
 # =========================
 **/build/
 !gradle/wrapper/gradle-wrapper.jar
-
-# =========================
-# Artifacts
-# =========================
-python-ml/artifacts/
