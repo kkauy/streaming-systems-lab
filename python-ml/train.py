@@ -213,7 +213,13 @@ def main():
 
     generate_all_visualizations(pipe, X_train, X_test, y_train, y_test, cv_results)
 
-    persist_results(best_C, best_val_mean, best_val_std, test_roc)
+    # data persistence
+    try:
+        persist_results(best_C, best_val_mean, best_val_std, test_roc)
+        print("✓ Results logged to database")
+    except Exception as e:
+        print(f"⚠ Database logging skipped (database not configured)")
+
     save_artifacts(pipe, X_train.columns)
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ import numpy as np
 from sklearn.metrics import roc_curve, confusion_matrix, auc
 from pathlib import Path
 
+
 # Set style for research-quality plots
 plt.style.use('seaborn-v0_8-darkgrid')
 sns.set_palette("husl")
@@ -26,6 +27,8 @@ def plot_roc_curve(y_test, y_test_prob, save_path='artifacts/roc_curve.png'):
     Returns:
         Figure object
     """
+    Path(save_path).parent.mkdir(parents=True, exist_ok=True)
+
     # Compute ROC curve points
     fpr, tpr, thresholds = roc_curve(y_test, y_test_prob)
     roc_auc = auc(fpr, tpr)
