@@ -109,41 +109,57 @@ Results: Train ROC=0.9976, Test ROC=0.9960
 
 ---
 
-## Visualizations
+## Research Figures (Saved in `python-ml/artifacts/`)
 
-### ROC Curve
+### Figure 1 — ROC Curve (Discrimination Ability)
 ![ROC Curve](python-ml/artifacts/roc_curve.png)
 
-The ROC curve demonstrates excellent discriminative ability with AUC = 0.9964.
+**Interpretation:**  
+Near-perfect separation between malignant and benign cases  
+(**AUC ≈ 0.996**), indicating excellent ranking performance across thresholds.
 
-### Confusion Matrix  
+---
+
+### Figure 2 — Confusion Matrix (Clinical Error Profile)
 ![Confusion Matrix](python-ml/artifacts/confusion_matrix.png)
 
-**Clinical Metrics:**
-- Recall (Sensitivity): 95.2% - Caught 40/42 malignant cases
-- Precision (PPV): 97.6% - 40/41 positive predictions correct
+**Interpretation:**  
+Shows false negatives vs false positives.  
+In cancer screening, minimizing **false negatives** is clinically critical.
 
-### Feature Importance
+**Clinical Metrics:**
+- Recall (Sensitivity): **95.2%** — detected 40 / 42 malignant cases  
+- Precision (PPV): **97.6%** — 40 / 41 positive predictions correct  
+
+---
+
+### Figure 3 — Feature Importance (Model Interpretability)
 ![Feature Importance](python-ml/artifacts/feature_importance.png)
 
-Top predictive features based on logistic regression coefficients.
+**Interpretation:**  
+Ranks predictors by coefficient magnitude, giving **transparent clinical insight**
+into what drives predictions.
 
-### Cross-Validation Performance
+---
+
+### Figure 4 — Cross-Validation Performance (Generalization Stability)
 ![CV Performance](python-ml/artifacts/cv_performance.png)
 
-Hyperparameter comparison showing C=1.0 achieves best validation performance.
+**Interpretation:**  
+Comparison of candidate **C values** demonstrates **stable generalization**
+via mean ± standard deviation ROC-AUC across folds.
 
 ---
 
 ### Final Held-Out Test Performance
 
-- **Train ROC-AUC:** 0.9976
-- **Test ROC-AUC:** 0.9960
+- **Train ROC-AUC:** 0.9976  
+- **Test ROC-AUC:** 0.9960  
 
-**Interpretation:**
-- Extremely strong class separability
-- Negligible overfitting (0.0016 gap)
-- High generalization stability
+**Interpretation:**  
+- Extremely strong class separability  
+- Negligible overfitting (**0.0016 gap**)  
+- High generalization stability suitable for **clinical decision support**
 
 ---
 
@@ -156,10 +172,27 @@ Hyperparameter comparison showing C=1.0 achieves best validation performance.
 | **Accuracy** |        |        | **0.982** | **114** |
 
 **Clinical Insight:**  
-High malignant recall (97.1%) is critical in cancer screening where 
-false negatives carry severe clinical consequences.
+High malignant recall (**97.1%**) is crucial because  
+**false negatives carry severe clinical consequences.**
 
 ---
+
+## Research Significance
+
+This study demonstrates that even a **simple, interpretable linear model**
+can achieve **clinically meaningful discrimination performance**
+when evaluated under **rigorous, leakage-free, and statistically sound protocols**.
+
+Rather than pursuing model complexity, this work emphasizes:
+
+- **Reproducibility**
+- **Generalization stability**
+- **Clinical interpretability**
+- **Transparent evaluation**
+
+These principles align with real-world **medical AI research standards**
+and responsible deployment in decision-support environments.
+
 
 ## Model Interpretability
 
