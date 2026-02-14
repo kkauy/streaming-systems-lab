@@ -121,6 +121,7 @@ Near-perfect separation between malignant and benign cases
 ---
 
 ### Figure 2 — Confusion Matrix (Clinical Error Profile)
+
 ![Confusion Matrix](python-ml/artifacts/confusion_matrix.png)
 
 **Interpretation:**  
