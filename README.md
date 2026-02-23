@@ -323,24 +323,30 @@ C=1.0   Train ROC=0.9977±0.0008  Val ROC=0.9958±0.0047
 
 ## Repository Structure
 ```
-.
+
 ├── python-ml/
-│   ├── train.py                 # Main training pipeline
+│   ├── train.py                 # Main training pipeline (Core Logic)
 │   ├── visualize_results.py     # Visualization module
 │   ├── data_analysis.py         # Data exploration
-│   ├── model_runs_repo.py       # Database logging (optional)
-│   ├── db.py                    # Database connection (optional)
-│   └── artifacts/               # Generated outputs
+│   ├── model_runs_repo.py       # Database logging (Optional)
+│   ├── db.py                    # Database connection (Optional)
+│   └── artifacts/               # Generated research outputs
 │       ├── roc_curve.png
 │       ├── confusion_matrix.png
 │       ├── feature_importance.png
 │       ├── cv_performance.png
-│       └── pipeline.joblib
+│       ├── pipeline.joblib      # Serialized model pipeline
+│       └── .gitkeep             # Ensures directory persistence
 ├── data/
-│   └── breast_cancer.csv        # Dataset
-├── .env.example                 # Database config template
-├── .gitignore
-└── README.md
+│   └── breast_cancer.csv        # Source Dataset
+├── .dockerignore                # Docker build context exclusions
+├── .env.example                 # Template for local environment variables
+├── .gitignore                   # Git version control exclusions
+├── Dockerfile                   # Research environment containerization
+├── Makefile                     # Automation shortcuts (install, train, docker)
+├── README.md                    # Research study documentation
+├── requirements.txt             # Python dependency manifest
+└── schema.sql                   # PostgreSQL tracking table definition
 ```
 
 ---
