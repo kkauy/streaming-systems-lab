@@ -222,6 +222,34 @@ This approach mirrors real-world ML research standards and MLOps governance.
 
 ---
 
+## Experiment Tracking (PostgreSQL)
+
+To support reproducible research workflows, each training run is logged to PostgreSQL, including:
+
+- Dataset provenance (SHA256 hash, rows/columns)
+- Pipeline configuration
+- Hyperparameters
+- Evaluation metrics (CV mean/std, test ROC-AUC)
+- Artifact paths (ROC curve, confusion matrix, saved model)
+
+This creates an auditable experiment history and enables run-to-run comparison using SQL.
+
+---
+
+### Example Query — Top Runs by Test ROC-AUC
+
+```sql
+SELECT
+  id,
+  (metrics->>'auc_test')::float AS auc_test,
+  created_at
+FROM experiment_runs
+ORDER BY auc_test DESC
+LIMIT 5;
+```
+
+---
+
 ## Limitations
 
 1. **Small dataset** (n=569) limits statistical power for rare patterns
@@ -265,13 +293,15 @@ To advance toward clinical-grade medical AI:
 ## Running the Project
 
 ### Prerequisites
+
+- Python 3.10+
+- Docker Desktop (for PostgreSQL)
+- Make
+
+Install Python dependencies:
+
 ```bash
 pip install pandas numpy scikit-learn psycopg2-binary matplotlib seaborn
-```
-
-### Quick Start
-```bash
-python python-ml/train.py
 ```
 
 ### Expected Output
@@ -297,9 +327,17 @@ Test  ROC-AUC: 0.9960
 Saved model run to Postgres (model_runs).
 ```
 
-### Database Setup (Optional)
-Experiment tracking uses PostgreSQL for audit trails. Configure connection 
-in `db.py`, or the code will run without database logging.
+--- 
+
+## Quick Start (Reproducible Run)
+
+From the repository root:
+
+```bash
+make db-up
+make db-init
+make train
+make top-runs
 
 ---
 
@@ -311,7 +349,10 @@ in `db.py`, or the code will run without database logging.
 │   ├── model_runs_repo.py    # Database logging
 │   └── db.py                 # Database connection
 ├── data/
-│   └── breast_cancer.csv     # Dataset
+│ └── breast_cancer.csv     # Dataset
+└──docker-compose.yml
+└──sql/schema.sql
+└──Makefile
 └── README.md
 ```
 
