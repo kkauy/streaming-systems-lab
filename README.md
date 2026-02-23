@@ -323,30 +323,27 @@ C=1.0   Train ROC=0.9977±0.0008  Val ROC=0.9958±0.0047
 
 ## Repository Structure
 ```
-
-├── python-ml/
-│   ├── train.py                 # Main training pipeline (Core Logic)
-│   ├── visualize_results.py     # Visualization module
-│   ├── data_analysis.py         # Data exploration
-│   ├── model_runs_repo.py       # Database logging (Optional)
-│   ├── db.py                    # Database connection (Optional)
-│   └── artifacts/               # Generated research outputs
-│       ├── roc_curve.png
-│       ├── confusion_matrix.png
-│       ├── feature_importance.png
-│       ├── cv_performance.png
-│       ├── pipeline.joblib      # Serialized model pipeline
-│       └── .gitkeep             # Ensures directory persistence
-├── data/
-│   └── breast_cancer.csv        # Source Dataset
-├── .dockerignore                # Docker build context exclusions
-├── .env.example                 # Template for local environment variables
+├.
+├── python-ml/                   # Core research code
+│   ├── artifacts/               # Research outputs (ROC Curves, Models)
+│   ├── .env.example             # Database configuration template
+│   ├── data_analysis.py         # EDA module
+│   ├── db.py                    # Database connection logic
+│   ├── model_runs_repo.py       # SQL logging implementation
+│   ├── preprocess.py            # Feature engineering and cleaning
+│   ├── requirements.txt         # Python dependency manifest
+│   ├── train.py                 # Main training pipeline
+│   └── visualize_results.py     # Visualization module
+├── sql/                         # Database definitions
+│   └── schema.sql               # PostgreSQL table schema
+├── data/                        # Source datasets
+│   └── breast_cancer.csv
+├── .dockerignore                # Docker build exclusions
 ├── .gitignore                   # Git version control exclusions
+├── data_access.py               # Data interface layer
 ├── Dockerfile                   # Research environment containerization
 ├── Makefile                     # Automation shortcuts (install, train, docker)
-├── README.md                    # Research study documentation
-├── requirements.txt             # Python dependency manifest
-└── schema.sql                   # PostgreSQL tracking table definition
+└── README.md                    # Research study documentation
 ```
 
 ---
