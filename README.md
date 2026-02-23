@@ -1,83 +1,55 @@
 # Breast Cancer Diagnosis – Logistic Regression Research Study
 
 ## Research Objective
-
-This study investigates the generalization stability and clinical reliability 
-of a logistic regression classifier for breast cancer diagnosis using 
-structured machine learning evaluation.
+This study investigates the generalization stability and clinical reliability of a logistic regression classifier for breast cancer diagnosis using structured machine learning evaluation.
 
 ## Research Question
-
-Can a properly regularized logistic regression model achieve stable, 
-high-confidence discrimination between malignant and benign tumors under 
-rigorous cross-validation and unbiased test evaluation?
+Can a properly regularized logistic regression model achieve stable, high-confidence discrimination between malignant and benign tumors under rigorous cross-validation and unbiased test evaluation?
 
 ## Hypothesis
-
-We hypothesize that with:
-- Careful regularization tuning (C parameter)
-- Strict data leakage prevention  
-- Stratified cross-validation model selection
-
-The model will demonstrate:
-- High ROC-AUC (>0.99)
-- Minimal train–test performance gap
-- Clinically meaningful recall for malignant cases
-
-This would indicate robust generalization rather than overfitting.
+We hypothesize that with careful regularization tuning ($C$ parameter), strict data leakage prevention, and stratified cross-validation, the model will demonstrate:
+* High $ROC-AUC$ ($>0.99$).
+* Minimal train–test performance gap.
+* Clinically meaningful recall for malignant cases.
 
 ---
 
 ## Dataset
-
-**Source:** Breast Cancer Wisconsin Diagnostic Dataset  
-**Samples:** 569  
-**Target:**
-- Malignant → 1
-- Benign → 0
-
-Class balance is preserved using **stratified sampling** across:
-- Train/test split (80/20)
-- Cross-validation folds (5-fold)
-
-This ensures statistically fair evaluation.
+* **Source:** Breast Cancer Wisconsin Diagnostic Dataset.
+* **Samples:** 569.
+* **Target:** Malignant (1), Benign (0).
+* **Sampling:** Class balance is preserved using **stratified sampling** across train/test split (80/20) and 5-fold cross-validation.
 
 ---
 
 ## Methodology
 
 ### 1. Leakage-Free Preprocessing (No-Leakage Policy)
-To ensure research integrity and prevent "optimistic bias," the pipeline implements:
-* **Encapsulated Scaling:** `StandardScaler` is integrated into a `scikit-learn Pipeline`.
-* **Strict Partitioning:** Scaler parameters are **fitted only on training data**.
-* **Clinical Realism:** This prevents information from the test set from "leaking" into the model, mirroring real-world deployment on unknown patient data.
+To ensure research integrity and prevent "optimistic bias," the pipeline implements a strict zero-leakage policy:
+* **Data Pipeline & Leakage Defense:** This pipeline strictly enforces isolation between training and testing data to maintain research integrity.
+* **Encapsulated Scaling:** The `StandardScaler` is integrated into a `scikit-learn Pipeline` to ensure modularity and prevent accidental manual scaling errors.
+* **Train-Only Fitting:** Normalization parameters are **fitted only on training data**, preventing any test set information from "leaking" into the model's training phase.
+* **Clinical Realism:** This architecture mirrors real-world clinical deployment where the model must process unseen patient data without prior knowledge of its distribution.
 
-
+[Image of scikit-learn pipeline for data leakage prevention]
 
 ### 2. Model Formulation & Transparency
 We utilize **Logistic Regression with L2 Regularization** for the following reasons:
 * **Interpretability:** Provides clear coefficient analysis to identify key clinical predictors.
 * **Convergence:** Employed the `LBFGS` solver with `max_iter=2000` to ensure stability on structured data.
-* **Hyperparameter Candidates:** Evaluated $C \in \{1.0, 0.1, 0.01\}$ to optimize the penalty strength.
-
-### 3. Rigorous Evaluation Protocol
-To guarantee statistical rigor and unbiased performance estimates:
-* **Model Selection:** 5-fold **Stratified Cross-Validation** (maintaining class ratios in every fold).
-* **Metric:** Optimized for Mean ROC-AUC $\pm$ Standard Deviation.
-* **Final Validation:** The held-out test set (20%) is evaluated **exactly once** to provide the final generalization performance.
+* **Hyperparameter Selection:** Evaluated $C \in \{1.0, 0.1, 0.01\}$ to optimize the penalty strength.
 
 ---
 
 ### Software Integrity & Reproducibility
-To meet the high standards of medical research, this project implements:
-- **Containerization (Docker):** Guarantees that the computational environment (Python version, library dependencies) is identical across all research workstations.
-- **Experiment Tracking (SQL):** Every model run is logged into a PostgreSQL database, capturing hyperparameter configurations and performance metrics for auditability.
-- **Environment Isolation:** Uses `.env` management and `.dockerignore` to separate local development configurations from the core research logic.
+* **Containerization (Docker):** Guarantees that the computational environment (Python version, library dependencies) is identical across all research workstations.
+* **Experiment Tracking (SQL):** Every model run is logged into a PostgreSQL database, capturing hyperparameter configurations and performance metrics for auditability.
+* **Environment Isolation:** Uses `.env` management and `.dockerignore` to separate local development configurations from core research logic.
 
 ---
 
 ## Evaluation Pipeline
-```
+```text
 Raw Dataset (569 samples)
         ↓
 Stratified Train/Test Split (80/20)
@@ -94,13 +66,16 @@ Single Test Evaluation
         ↓
 Results: Train ROC=0.9976, Test ROC=0.9960
 ```
-
 ---
 
 ## Results
 
 ### Clinically-Driven Metric Selection & Logic
-In medical diagnostics, not all errors carry the same weight. Our evaluation strategy prioritizes **Clinical Utility** over raw metrics:
+In medical diagnostics, not all errors carry the same weight. Our evaluation strategy prioritizes **Clinical Utility** over raw performance metrics:
+
+* **Recall (Sensitivity) > Accuracy:** We prioritize capturing every malignant case. A **False Negative** (missed cancer) has severe clinical consequences, whereas a **False Positive** (unnecessary biopsy) is a manageable clinical cost.
+* **High-Precision Reporting (`digits=3`):** All classification metrics are reported to the 3rd decimal place to provide the necessary granularity for model comparison.
+* **Granular Model Selection:** This precision allows us to distinguish between hyperparameter candidates (e.g., $C=1.0$ vs $C=0.1$) that might appear identical at standard 2-decimal rounding, ensuring we select the most stable and reliable model.
 
 * **Recall (Sensitivity) > Accuracy:** We prioritize capturing every malignant case. A 
 * **False Negative** (missed cancer) has severe clinical consequences, whereas a 
