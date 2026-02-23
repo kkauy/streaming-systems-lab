@@ -25,14 +25,14 @@ def load_dataset(path: Path) -> pd.DataFrame:
     if "Unnamed: 32" in df.columns:
         df = df.drop(columns=["Unnamed: 32"])
 
-    # Lable encode
+    # Label encode
     df["diagnosis"] = df["diagnosis"].map({"M": 1, "B": 0})
 
     # Robust handling of bad values
     # replace inf with NaN
     df = df.replace([np.inf, -np.inf], np.nan)
 
-    # Check for remaining inf innumeric columns
+    # Check for remaining inf numeric columns
     numeric_cols = df.select_dtypes(include=[np.number]).columns
 
     # Drop rows with NaN
@@ -44,8 +44,6 @@ def load_dataset(path: Path) -> pd.DataFrame:
             upper_limit = df[col].quantile(0.999)
             lower_limit = df[col].quantile(0.001)
             df[col] = df[col].clip(lower = lower_limit, upper = upper_limit)
-
-
 
     return df
 

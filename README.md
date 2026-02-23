@@ -46,31 +46,33 @@ This ensures statistically fair evaluation.
 
 ## Methodology
 
-### 1. Leakage-Free Preprocessing
-- Features standardized via `StandardScaler`
-- Scaler **fitted only on training data**
-- Prevents information leakage into validation/test sets
-- Mirrors real clinical deployment conditions
+### 1. Leakage-Free Preprocessing (No-Leakage Policy)
+To ensure research integrity and prevent "optimistic bias," the pipeline implements:
+* **Encapsulated Scaling:** `StandardScaler` is integrated into a `scikit-learn Pipeline`.
+* **Strict Partitioning:** Scaler parameters are **fitted only on training data**.
+* **Clinical Realism:** This prevents information from the test set from "leaking" into the model, mirroring real-world deployment on unknown patient data.
 
-### 2. Model Formulation
-- **Logistic Regression** with L2 regularization
-- Hyperparameter C ∈ {1.0, 0.1, 0.01}
-- LBFGS solver with max_iter=2000 for convergence
 
-**Why Logistic Regression?**
-- Interpretable coefficients
-- Statistical stability on small datasets
-- Clinical transparency for medical applications
+
+### 2. Model Formulation & Transparency
+We utilize **Logistic Regression with L2 Regularization** for the following reasons:
+* **Interpretability:** Provides clear coefficient analysis to identify key clinical predictors.
+* **Convergence:** Employed the `LBFGS` solver with `max_iter=2000` to ensure stability on structured data.
+* **Hyperparameter Candidates:** Evaluated $C \in \{1.0, 0.1, 0.01\}$ to optimize the penalty strength.
 
 ### 3. Rigorous Evaluation Protocol
+To guarantee statistical rigor and unbiased performance estimates:
+* **Model Selection:** 5-fold **Stratified Cross-Validation** (maintaining class ratios in every fold).
+* **Metric:** Optimized for Mean ROC-AUC $\pm$ Standard Deviation.
+* **Final Validation:** The held-out test set (20%) is evaluated **exactly once** to provide the final generalization performance.
 
-**Model Selection:**
-- 5-fold Stratified Cross-Validation
-- Metrics: Mean ROC-AUC ± Standard Deviation
+---
 
-**Final Evaluation:**
-- Held-out test set evaluated **exactly once**
-- Provides unbiased generalization estimate
+### Software Integrity & Reproducibility
+To meet the high standards of medical research, this project implements:
+- **Containerization (Docker):** Guarantees that the computational environment (Python version, library dependencies) is identical across all research workstations.
+- **Experiment Tracking (SQL):** Every model run is logged into a PostgreSQL database, capturing hyperparameter configurations and performance metrics for auditability.
+- **Environment Isolation:** Uses `.env` management and `.dockerignore` to separate local development configurations from the core research logic.
 
 ---
 
@@ -97,6 +99,15 @@ Results: Train ROC=0.9976, Test ROC=0.9960
 
 ## Results
 
+### Clinically-Driven Metric Selection & Logic
+In medical diagnostics, not all errors carry the same weight. Our evaluation strategy prioritizes **Clinical Utility** over raw metrics:
+
+* **Recall (Sensitivity) > Accuracy:** We prioritize capturing every malignant case. A 
+* **False Negative** (missed cancer) has severe clinical consequences, whereas a 
+* **False Positive** (unnecessary biopsy) is a manageable clinical cost.
+* **High-Precision Reporting (`digits=3`):**
+* ** All classification metrics are reported to the 3rd decimal place.
+* **Granular Model Selection:** This precision allows us to distinguish between hyperparameter candidates (e.g., $C=1.0$ vs $C=0.1$) that might appear identical at standard 2-decimal rounding, ensuring we select the most stable and reliable model.
 ### Cross-Validation Performance (Training Set Only)
 
 | C    | Train ROC-AUC      | Validation ROC-AUC |
@@ -243,26 +254,25 @@ To advance toward clinical-grade medical AI:
 
 ---
 
-## Tech Stack
+## Tech Stack & Infrastructure
 
-**Core:**
-- Python 3
-- Pandas, NumPy (data processing)
-- scikit-learn (ML pipeline)
-
-**Models & Evaluation:**
-- `LogisticRegression` (L2 regularization)
-- `StratifiedKFold` (cross-validation)
-- `StandardScaler` (preprocessing)
-- ROC-AUC, Precision, Recall, F1-Score
-
-**Infrastructure:**
-- PostgreSQL (experiment tracking)
-- Git (version control)
+- **Core:** Python 3.11, Pandas, NumPy
+- **ML Framework:** scikit-learn (Logistic Regression with L2 Regularization)
+- **Containerization:** Docker (Ensuring 100% Research Reproducibility)
+- **Data Persistence:** PostgreSQL (For Experiment Tracking & Audit Trails)
+- **Environment Management:** `python-dotenv` for secure credential handling
 
 ---
 
 ## Installation & Usage
+
+### Method 1: Standard Python Environment
+```bash
+pip install -r requirements.txt
+python python-ml/train.py
+
+```
+---
 
 ### Quick Start
 
