@@ -216,37 +216,9 @@ This study enforces deterministic, auditable ML practice:
 - ✅ Fully stratified evaluation at all stages
 - ✅ Strict data leakage prevention
 - ✅ Single-use held-out test set
-- ✅ PostgreSQL experiment tracking for audit trails
+- ✅ Optional PostgreSQL experiment tracking for audit trails
 
 This approach mirrors real-world ML research standards and MLOps governance.
-
----
-
-## Experiment Tracking (PostgreSQL)
-
-To support reproducible research workflows, each training run is logged to PostgreSQL, including:
-
-- Dataset provenance (SHA256 hash, rows/columns)
-- Pipeline configuration
-- Hyperparameters
-- Evaluation metrics (CV mean/std, test ROC-AUC)
-- Artifact paths (ROC curve, confusion matrix, saved model)
-
-This creates an auditable experiment history and enables run-to-run comparison using SQL.
-
----
-
-### Example Query — Top Runs by Test ROC-AUC
-
-```sql
-SELECT
-  id,
-  (metrics->>'auc_test')::float AS auc_test,
-  created_at
-FROM experiment_runs
-ORDER BY auc_test DESC
-LIMIT 5;
-```
 
 ---
 
@@ -290,19 +262,38 @@ To advance toward clinical-grade medical AI:
 
 ---
 
-## Running the Project
+## Installation & Usage
 
-### Prerequisites
+### Quick Start
 
-- Python 3.10+
-- Docker Desktop (for PostgreSQL)
-- Make
-
-Install Python dependencies:
-
+**1. Install dependencies:**
 ```bash
-pip install pandas numpy scikit-learn psycopg2-binary matplotlib seaborn
+pip install pandas numpy scikit-learn psycopg2-binary matplotlib seaborn python-dotenv
 ```
+
+**2. Run training pipeline:**
+```bash
+python python-ml/train.py
+```
+
+**3. View results:**
+- Training metrics displayed in console
+- 4 visualizations saved to `python-ml/artifacts/`
+- Model pipeline saved to `python-ml/artifacts/pipeline.joblib`
+
+### Database Setup (Optional)
+
+The script includes optional PostgreSQL experiment tracking. To enable:
+
+**Create a `.env` file:**
+```bash
+DB_HOST=localhost
+DB_NAME=ml_experiments
+DB_USER=your_username
+DB_PASSWORD=your_password
+```
+
+**Note:** The script runs successfully without database configuration - it will skip logging and continue with model training and visualization.
 
 ### Expected Output
 ```
@@ -314,30 +305,9 @@ Cross-validation selection for C (TRAIN only)
 C=1.0   Train ROC=0.9977±0.0008  Val ROC=0.9958±0.0047
 ...
 
-Selected C = 1.0 (best CV Val ROC mean, stable std)
-
-============================================================
-FINAL C=1.0
-Train ROC-AUC: 0.9976
-Test  ROC-AUC: 0.9960
-
-              precision    recall  f1-score   support
-...
-
-Saved model run to Postgres (model_runs).
+✓ All visualizations saved to artifacts/
+⚠ Database logging skipped (database not configured)
 ```
-
---- 
-
-## Quick Start (Reproducible Run)
-
-From the repository root:
-
-```bash
-make db-up
-make db-init
-make train
-make top-runs
 
 ---
 
@@ -345,14 +315,21 @@ make top-runs
 ```
 .
 ├── python-ml/
-│   ├── train.py              # Main training pipeline
-│   ├── model_runs_repo.py    # Database logging
-│   └── db.py                 # Database connection
+│   ├── train.py                 # Main training pipeline
+│   ├── visualize_results.py     # Visualization module
+│   ├── data_analysis.py         # Data exploration
+│   ├── model_runs_repo.py       # Database logging (optional)
+│   ├── db.py                    # Database connection (optional)
+│   └── artifacts/               # Generated outputs
+│       ├── roc_curve.png
+│       ├── confusion_matrix.png
+│       ├── feature_importance.png
+│       ├── cv_performance.png
+│       └── pipeline.joblib
 ├── data/
-│ └── breast_cancer.csv     # Dataset
-└──docker-compose.yml
-└──sql/schema.sql
-└──Makefile
+│   └── breast_cancer.csv        # Dataset
+├── .env.example                 # Database config template
+├── .gitignore
 └── README.md
 ```
 
